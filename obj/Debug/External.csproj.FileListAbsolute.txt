@@ -1,5 +1,4 @@
 E:\Stuff\External\bin\Debug\External.pdb
-E:\Stuff\External\obj\Debug\External.csprojAssemblyReference.cache
 E:\Stuff\External\obj\Debug\External.pdb
 E:\Stuff\External\bin\Debug\External.exe
 E:\Stuff\External\obj\Debug\External.exe

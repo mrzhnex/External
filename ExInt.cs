@@ -10,25 +10,19 @@ namespace External
         private ExInt(string value)
         {
             Positive = true;
+            Add(GetBytesFromString(0.ToString()));
             Add(GetBytesFromString(value));
         }
         
         #region public methods
         public override string ToString()
         {
-            if (Values.Count > 0)
+            string result = GetPositive();
+            for (int i = Values.Count - 1; i >= 0; i--)
             {
-                string result = GetPositive();
-                for (int i = Values.Count - 1; i >= 0; i--)
-                {
-                    result += Values[i];
-                }
-                return result;
+                result += Values[i];
             }
-            else
-            {
-                return "0";
-            }
+            return result;
         }
         #endregion
 
@@ -197,7 +191,7 @@ namespace External
         {
             for (int i = Values.Count - 1; i >= 0; i--)
             {
-                if (i == Values.Count - 1 && Values[i] == 0)
+                if (i == Values.Count - 1 && Values[i] == 0 && i != 0)
                     Values.RemoveAt(i);
                 else
                     break;
@@ -212,8 +206,12 @@ namespace External
             }
             return true;
         }
-        private bool IsLargeThanOriginal(List<byte> values)
+        public bool IsLargeThanOriginal(List<byte> values)
         {
+            if (values.Count > Values.Count)
+                return true;
+            if (values.Count < Values.Count)
+                return false;
             for (int i = Values.Count - 1; i >= 0; i--)
             {
                 if (values[i] > Values[i])
@@ -270,11 +268,6 @@ namespace External
         {
             return new ExInt(v);
         }
-        public static ExInt operator +(ExInt exInt, ulong v)
-        {
-            exInt.Add(exInt.GetBytesFromString(v.ToString()));
-            return exInt;
-        }
         public static ExInt operator +(ExInt exInt, string v)
         {
             if (v != null && v.Length > 0)
@@ -287,9 +280,41 @@ namespace External
                 exInt.Remove(exInt.GetBytesFromString(v));
             return exInt;
         }
-        public static ExInt operator -(ExInt exInt, ulong v)
+        public static ExInt operator ++(ExInt exInt)
         {
-            exInt.Remove(exInt.GetBytesFromString(v.ToString()));
+            exInt.Add(new List<byte>() { 1 });
+            return exInt;
+        }
+        public static ExInt operator --(ExInt exInt)
+        {
+            exInt.Remove(new List<byte>() { 1 });
+            return exInt;
+        }
+        public static bool operator <(ExInt left, ExInt right)
+        {
+            if (left.IsLargeThanOriginal(right.Values))
+                return true;
+            return false;
+        }
+        public static bool operator >(ExInt left, ExInt right)
+        {
+            if (right.IsLargeThanOriginal(left.Values))
+                return true;
+            return false;
+        }
+        public static ExInt operator *(ExInt exInt, string v)
+        {
+            if (v != null && v.Length > 0)
+            {
+                List<byte> tempValues = new List<byte>();
+                tempValues.AddRange(exInt.Values);
+                ExInt maxValue = v;
+                for (ExInt count = 1; count < maxValue; count++)
+                {
+                    Console.WriteLine("Add " + tempValues[0] + " to " + exInt + " in step " + count + " max " + maxValue);
+                    exInt.Add(tempValues);
+                }
+            }
             return exInt;
         }
         #endregion
