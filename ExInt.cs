@@ -13,6 +13,11 @@ namespace External
             if (value != null && value != string.Empty && value.Length > 0)
                 Add(GetBytesFromString(value));
         }
+        private ExInt(ExInt old)
+        {
+            SetToZero();
+            Add(old.Values);
+        }
         
         #region public methods
         public override string ToString()
@@ -286,24 +291,19 @@ namespace External
         }
         public static bool operator <(ExInt left, ExInt right)
         {
-            return left.IsLargeThanForReal(right);
+            return right.IsLargeThanForReal(left);
         }
         public static bool operator >(ExInt left, ExInt right)
         {
-            return right.IsLargeThanForReal(left);
+            return left.IsLargeThanForReal(right);
         }
         public static ExInt operator *(ExInt exInt, string v)
         {
-            if (v != null && v.Length > 0)
+            ExInt tempExInt = new ExInt(exInt);
+            ExInt maxCount = new ExInt(v);
+            for (ExInt count = 1; count < maxCount; count++)
             {
-                List<byte> tempValues = new List<byte>();
-                tempValues.AddRange(exInt.Values);
-                ExInt maxValue = v;
-                for (ExInt count = 1; count < maxValue; count++)
-                {
-                    Console.WriteLine("Add " + tempValues[0] + " to " + exInt + " in step " + count + " max " + maxValue);
-                    exInt.Add(tempValues);
-                }
+                exInt.Plus(tempExInt);
             }
             return exInt;
         }

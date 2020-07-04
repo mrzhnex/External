@@ -13,11 +13,29 @@ namespace External
             while (true)
             {
                 string line = Console.ReadLine();
-                if (line == "a")
+                if (line.Length > 0)
                 {
-                    throw new Exception("ad");
+                    string symbol = line[0].ToString();
+                    
+                    switch (symbol)
+                    {
+                        case "+":
+                            line = line.Substring(1);
+                            exInt += line;
+                            break;
+                        case "-":
+                            line = line.Substring(1);
+                            exInt -= line;
+                            break;
+                        case "*":
+                            line = line.Substring(1);
+                            exInt *= line;
+                            break;
+                        default:
+                            exInt = line;
+                            break;
+                    }
                 }
-                exInt += line;
                 Console.WriteLine("Number: " + exInt.ToString());
             }
             
