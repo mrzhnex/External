@@ -9,6 +9,7 @@ namespace External
             Console.WriteLine("Hello world!");
 
             ExInt exInt = 0;
+
             while (true)
             {
                 string line = Console.ReadLine();
@@ -17,21 +18,7 @@ namespace External
                     throw new Exception("ad");
                 }
                 exInt += line;
-                Console.WriteLine("Number+: " + exInt.ToString());
-                line = Console.ReadLine();
-                if (line == "a")
-                {
-                    throw new Exception("ad");
-                }
-                exInt -= line;
-                Console.WriteLine("Number-: " + exInt.ToString());
-                line = Console.ReadLine();
-                if (line == "a")
-                {
-                    throw new Exception("ad");
-                }
-                exInt *= line;
-                Console.WriteLine("Number*: " + exInt.ToString());
+                Console.WriteLine("Number: " + exInt.ToString());
             }
             
 

@@ -5,13 +5,13 @@ namespace External
 {
     internal class ExInt
     {
-        private readonly List<byte> Values = new List<byte>();
+        private List<byte> Values { get; set; }
         private bool Positive { get; set; }
         private ExInt(string value)
         {
-            Positive = true;
-            Add(GetBytesFromString(0.ToString()));
-            Add(GetBytesFromString(value));
+            SetToZero();
+            if (value != null && value != string.Empty && value.Length > 0)
+                Add(GetBytesFromString(value));
         }
         
         #region public methods
@@ -24,162 +24,125 @@ namespace External
             }
             return result;
         }
+        public ExInt Plus(ExInt exInt)
+        {
+            if (Positive && exInt.Positive)
+            {
+                Add(exInt.Values);
+            }
+            else if (Positive && !exInt.Positive)
+            {
+                if (IsLargeThan(exInt))
+                {
+                    Remove(exInt.Values);
+                }
+                else
+                {
+                    return exInt.Plus(this);
+                }
+            }
+            else if (!Positive && exInt.Positive)
+            {
+                if (IsLargeThan(exInt))
+                {
+                    Remove(exInt.Values);
+                }
+                else
+                {
+                    return exInt.Plus(this);
+                }
+            }
+            else if (!Positive && !exInt.Positive)
+            {
+                Add(exInt.Values);
+            }
+            return this;
+        }
+        public ExInt Minus(ExInt exInt)
+        {
+            if (Positive && exInt.Positive)
+            {
+                if (IsLargeThan(exInt))
+                {
+                    Remove(exInt.Values);
+                }
+                else
+                {
+                    exInt.Remove(Values);
+                    exInt.SwitchPositive();
+                    return exInt;
+                }
+            }
+            else if (Positive && !exInt.Positive)
+            {
+                Add(exInt.Values);
+            }
+            else if (!Positive && exInt.Positive)
+            {
+                Add(exInt.Values);
+            }
+            else if (!Positive && !exInt.Positive)
+            {
+                if (IsLargeThan(exInt))
+                {
+                    Remove(exInt.Values);
+                }
+                else
+                {
+                    exInt.Remove(Values);
+                    exInt.SwitchPositive();
+                    return exInt;
+                }
+            }
+            return this;
+        }
         #endregion
 
         #region private methods
         private void Add(List<byte> values)
         {
-            if (Positive)
+            values = CompareToOriginal(values);
+            for (int i = 0; i < values.Count; i++)
             {
-                for (int i = 0; i < values.Count; i++)
+                if (Values[i] + values[i] > 9)
                 {
-                    if (Values[i] + values[i] > 9)
+                    Values[i] = (byte)(Values[i] + values[i] - 10);
+                    if (i == values.Count - 1)
                     {
-                        Values[i] = (byte)(Values[i] + values[i] - 10);
-                        if (i == values.Count - 1)
-                        {
-                            Values.Add(1);
-                        }
-                        else
-                        {
-                            Values[i + 1] += 1;
-                        }
+                        Values.Add(1);
                     }
                     else
                     {
-                        Values[i] += values[i];
+                        Values[i + 1] += 1;
                     }
-                }
-            }
-            else
-            {
-                if (IsEqual(values))
-                {
-                    Values.Clear();
-                    Values.Add(0);
-                    Positive = true;
                 }
                 else
                 {
-                    if (IsLargeThanOriginal(values))
-                    {
-                        for (int i = values.Count - 1; i >= 0; i--)
-                        {
-                            if (values[i] < Values[i])
-                            {
-                                values[i] = (byte)(10 - (Values[i] - values[i]));
-                                if (i < values.Count - 1)
-                                {
-                                    values[i + 1] -= 1;
-                                }
-                            }
-                            else
-                            {
-                                values[i] -= Values[i];
-                            }
-                        }
-                        Values.Clear();
-                        Values.AddRange(values);
-                        Positive = true;
-                    }
-                    else
-                    {
-                        for (int i = values.Count - 1; i >= 0; i--)
-                        {
-                            if (Values[i] < values[i])
-                            {
-                                Values[i] = (byte)(10 - (values[i] - Values[i]));
-                                if (i < values.Count - 1)
-                                {
-                                    Values[i + 1] -= 1;
-                                }
-                            }
-                            else
-                            {
-                                Values[i] -= values[i];
-                            }
-                        }
-                    }
-                }               
+                    Values[i] += values[i];
+                }
             }
             ClearEmpty();
         }
         private void Remove(List<byte> values)
         {
-            if (IsLargeThanOriginal(values))
+            values = CompareToOriginal(values);
+            for (int i = 0; i < values.Count; i++)
             {
-                Positive = false;
-                for (int i = Values.Count - 1; i >= 0; i--)
+                if (Values[i] < values[i])
                 {
-                    if (values[i] < Values[i])
+                    if (i < values.Count - 1)
                     {
-                        values[i] = (byte)(10 - (Values[i] - values[i]));
-                        if (i < values.Count - 1)
-                        {
-                            values[i + 1] -= 1;
-                        }
+                        values[i + 1] = (byte)(10 - (10 - (values[i] - Values[i])));
                     }
-                    else
+                    Values[i] = (byte)(10 - (values[i] - Values[i]));
+                    if (i == values.Count - 1)
                     {
-                        values[i] -= Values[i];
-                    }
-                }
-                Values.Clear();
-                Values.AddRange(values);
-            }
-            else
-            {
-                if (Positive)
-                {
-                    if (IsEqual(values))
-                    {
-                        Values.Clear();
-                        Values.Add(0);
-                    }
-                    else
-                    {
-                        for (int i = 0; i < values.Count; i++)
-                        {
-                            if (Values[i] < values[i])
-                            {
-                                if (i < values.Count - 1)
-                                {
-                                    values[i + 1] = (byte)(10 - (10 - (values[i] - Values[i])));
-                                }
-                                Values[i] = (byte)(10 - (values[i] - Values[i]));
-                                if (i == values.Count - 1)
-                                {
-                                    Values[i] = 0;
-                                }
-                            }
-                            else
-                            {
-                                Values[i] -= values[i];
-                            }
-                        }
+                        Values[i] = 0;
                     }
                 }
                 else
                 {
-                    for (int i = 0; i < values.Count; i++)
-                    {
-                        if (Values[i] + values[i] > 9)
-                        {
-                            Values[i] = (byte)(Values[i] + values[i] - 10);
-                            if (i == values.Count - 1)
-                            {
-                                Values.Add(1);
-                            }
-                            else
-                            {
-                                Values[i + 1] += 1;
-                            }
-                        }
-                        else
-                        {
-                            Values[i] += values[i];
-                        }
-                    }
+                    Values[i] -= values[i];
                 }
             }
             ClearEmpty();
@@ -187,6 +150,15 @@ namespace External
         #endregion
 
         #region help methods
+        private void SwitchPositive()
+        {
+            Positive = !Positive;
+        }
+        private void SetToZero()
+        {
+            Positive = true;
+            Values = new List<byte> { 0 };
+        }
         private void ClearEmpty()
         {
             for (int i = Values.Count - 1; i >= 0; i--)
@@ -197,28 +169,44 @@ namespace External
                     break;
             }
         }
-        private bool IsEqual(List<byte> values)
+        public bool IsEqual(ExInt exInt)
         {
-            for (int i = 0; i < Values.Count; i++)
+            if (Values.Count != exInt.Values.Count)
+                return false;
+            for (int i = Values.Count - 1; i >= 0; i--)
             {
-                if (values[i] != Values[i])
+                if (Values[i] != exInt.Values[i])
                     return false;
             }
             return true;
         }
-        public bool IsLargeThanOriginal(List<byte> values)
+        public bool IsLargeThan(ExInt exInt)
         {
-            if (values.Count > Values.Count)
+            if (Values.Count > exInt.Values.Count)
                 return true;
-            if (values.Count < Values.Count)
+            if (Values.Count < exInt.Values.Count)
                 return false;
             for (int i = Values.Count - 1; i >= 0; i--)
             {
-                if (values[i] > Values[i])
+                if (Values[i] > exInt.Values[i])
                     return true;
-                if (values[i] < Values[i])
+                if (Values[i] < exInt.Values[i])
                     return false;
             }
+            return false;
+        }
+        public bool IsLargeThanForReal(ExInt exInt)
+        {
+            if (Positive && exInt.Positive)
+                return IsLargeThan(exInt);
+            if (Positive && !exInt.Positive)
+                return true;
+            if (!Positive && exInt.Positive)
+                return false;
+            if (!Positive && !exInt.Positive && IsEqual(exInt))
+                return false;
+            if (!Positive && !exInt.Positive)
+                return !IsLargeThan(exInt);
             return false;
         }
         private string GetPositive()
@@ -232,23 +220,27 @@ namespace External
             {
                 tempValues.Add(GetByte(value, i));
             }
-            if (tempValues.Count > Values.Count)
+            return tempValues;
+        }
+        private List<byte> CompareToOriginal(List<byte> values)
+        {
+            if (values.Count > Values.Count)
             {
-                int count = tempValues.Count - Values.Count;
+                int count = values.Count - Values.Count;
                 for (int i = 0; i < count; i++)
                 {
                     Values.Add(0);
                 }
             }
-            else if (tempValues.Count < Values.Count)
+            else if (values.Count < Values.Count)
             {
-                int count = Values.Count - tempValues.Count;
+                int count = Values.Count - values.Count;
                 for (int i = 0; i < count; i++)
                 {
-                    tempValues.Add(0);
+                    values.Add(0);
                 }
             }
-            return tempValues;
+            return values;
         }
         private byte GetByte(string value, int index)
         {
@@ -260,47 +252,45 @@ namespace External
         #endregion
 
         #region operators
-        public static implicit operator ExInt(ulong v)
-        {
-            return new ExInt(v.ToString());
-        }
         public static implicit operator ExInt(string v)
         {
             return new ExInt(v);
         }
+        public static implicit operator ExInt(ulong v)
+        {
+            return new ExInt(v.ToString());
+        }
         public static ExInt operator +(ExInt exInt, string v)
         {
-            if (v != null && v.Length > 0)
-                exInt.Add(exInt.GetBytesFromString(v));
-            return exInt;
+            return exInt + new ExInt(v);
         }
         public static ExInt operator -(ExInt exInt, string v)
         {
-            if (v != null && v.Length > 0)
-                exInt.Remove(exInt.GetBytesFromString(v));
-            return exInt;
+            return exInt - new ExInt(v);
+        }
+        public static ExInt operator +(ExInt left, ExInt right)
+        {
+            return left.Plus(right);
+        }
+        public static ExInt operator -(ExInt left, ExInt right)
+        {
+            return left.Minus(right);
         }
         public static ExInt operator ++(ExInt exInt)
         {
-            exInt.Add(new List<byte>() { 1 });
-            return exInt;
+            return exInt.Plus(1);
         }
         public static ExInt operator --(ExInt exInt)
         {
-            exInt.Remove(new List<byte>() { 1 });
-            return exInt;
+            return exInt.Minus(1);
         }
         public static bool operator <(ExInt left, ExInt right)
         {
-            if (left.IsLargeThanOriginal(right.Values))
-                return true;
-            return false;
+            return left.IsLargeThanForReal(right);
         }
         public static bool operator >(ExInt left, ExInt right)
         {
-            if (right.IsLargeThanOriginal(left.Values))
-                return true;
-            return false;
+            return right.IsLargeThanForReal(left);
         }
         public static ExInt operator *(ExInt exInt, string v)
         {
