@@ -9,29 +9,27 @@ namespace External
             Console.WriteLine("Hello world!");
 
             ExInt exInt = 0;
-
             while (true)
             {
                 string line = Console.ReadLine();
                 if (line.Length > 0)
                 {
                     string symbol = line[0].ToString();
-                    
+                    line = line.Substring(1);
+
                     switch (symbol)
                     {
                         case "+":
-                            line = line.Substring(1);
                             exInt += line;
                             break;
                         case "-":
-                            line = line.Substring(1);
                             exInt -= line;
                             break;
                         case "*":
-                            line = line.Substring(1);
                             exInt *= line;
                             break;
                         default:
+                            line = symbol + line;
                             exInt = line;
                             break;
                     }
@@ -39,10 +37,6 @@ namespace External
                 Console.WriteLine("Number: " + exInt.ToString());
             }
             
-
-
-
-            Console.WriteLine("Press any button...");
             Console.ReadKey();
         }
     }

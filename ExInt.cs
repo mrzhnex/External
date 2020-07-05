@@ -1,5 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Linq.Expressions;
 
 namespace External
 {
@@ -22,7 +22,7 @@ namespace External
         #region public methods
         public override string ToString()
         {
-            return ToString(Values);
+            return GetPositive() + ToString(Values);
         }
         public ExInt Plus(ExInt exInt)
         {
@@ -36,6 +36,10 @@ namespace External
                 {
                     Remove(exInt.Values);
                 }
+                else if (IsEqual(exInt))
+                {
+                    SetToZero();
+                }
                 else
                 {
                     return exInt.Plus(this);
@@ -46,6 +50,10 @@ namespace External
                 if (IsLargeThan(exInt))
                 {
                     Remove(exInt.Values);
+                }
+                else if (IsEqual(exInt))
+                {
+                    SetToZero();
                 }
                 else
                 {
@@ -65,6 +73,10 @@ namespace External
                 if (IsLargeThan(exInt))
                 {
                     Remove(exInt.Values);
+                }
+                else if (IsEqual(exInt))
+                {
+                    SetToZero();
                 }
                 else
                 {
@@ -86,6 +98,10 @@ namespace External
                 if (IsLargeThan(exInt))
                 {
                     Remove(exInt.Values);
+                }
+                else if (IsEqual(exInt))
+                {
+                    SetToZero();
                 }
                 else
                 {
@@ -215,7 +231,7 @@ namespace External
         }
         private string ToString(List<byte> values)
         {
-            string result = GetPositive();
+            string result = string.Empty;
             for (int i = values.Count - 1; i >= 0; i--)
             {
                 result += values[i];
@@ -303,12 +319,19 @@ namespace External
         }
         public static ExInt operator *(ExInt exInt, string v)
         {
+            bool positive = exInt.Positive;
+            bool reverse = !positive;
+            exInt.Positive = true;
+
             ExInt tempExInt = new ExInt(exInt);
             ExInt maxCount = new ExInt(v);
             for (ExInt count = 1; count < maxCount; count++)
             {
+                if (reverse)
+                    positive = !positive;
                 exInt.Plus(tempExInt);
             }
+            exInt.Positive = positive;
             return exInt;
         }
         #endregion
