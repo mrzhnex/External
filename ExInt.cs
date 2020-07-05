@@ -22,12 +22,7 @@ namespace External
         #region public methods
         public override string ToString()
         {
-            string result = GetPositive();
-            for (int i = Values.Count - 1; i >= 0; i--)
-            {
-                result += Values[i];
-            }
-            return result;
+            return ToString(Values);
         }
         public ExInt Plus(ExInt exInt)
         {
@@ -135,14 +130,14 @@ namespace External
             {
                 if (Values[i] < values[i])
                 {
-                    if (i < values.Count - 1)
-                    {
-                        values[i + 1] = (byte)(10 - (10 - (values[i] - Values[i])));
-                    }
-                    Values[i] = (byte)(10 - (values[i] - Values[i]));
                     if (i == values.Count - 1)
                     {
                         Values[i] = 0;
+                    }
+                    else
+                    {
+                        Values[i] = (byte)(10 - (values[i] - Values[i]));
+                        values[i + 1]++;
                     }
                 }
                 else
@@ -217,6 +212,15 @@ namespace External
         private string GetPositive()
         {
             return Positive ? string.Empty : "-";
+        }
+        private string ToString(List<byte> values)
+        {
+            string result = GetPositive();
+            for (int i = values.Count - 1; i >= 0; i--)
+            {
+                result += values[i];
+            }
+            return result;
         }
         private List<byte> GetBytesFromString(string value)
         {
