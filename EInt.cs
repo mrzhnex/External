@@ -1,113 +1,128 @@
 ﻿using System.Collections.Generic;
-using System.Linq.Expressions;
 
 namespace External
 {
-    internal class ExInt
+    internal class EInt
     {
+        #region fields
         private List<byte> Values { get; set; }
         private bool Positive { get; set; }
-        private ExInt(string value)
+        #endregion
+
+        #region constructors
+        private EInt(string value, bool positive = true)
         {
             SetToZero();
+            Positive = positive;
             if (value != null && value != string.Empty && value.Length > 0)
                 Add(GetBytesFromString(value));
         }
-        private ExInt(ExInt old)
+        private EInt(EInt old)
         {
             SetToZero();
             Add(old.Values);
         }
-        
+        #endregion
+
         #region public methods
         public override string ToString()
         {
             return GetPositive() + ToString(Values);
         }
-        public ExInt Plus(ExInt exInt)
+        public void Replace(ref EInt right)
+        { 
+            EInt temp = right.Clone();
+            right.Values = Values;
+            Values = temp.Values;
+        }
+        public EInt Clone()
         {
-            if (Positive && exInt.Positive)
+            return new EInt(this);
+        }
+        public EInt Plus(EInt another)
+        {
+            if (Positive && another.Positive)
             {
-                Add(exInt.Values);
+                Add(another.Values);
             }
-            else if (Positive && !exInt.Positive)
+            else if (Positive && !another.Positive)
             {
-                if (IsLargeThan(exInt))
+                if (IsLargeThan(another))
                 {
-                    Remove(exInt.Values);
+                    Remove(another.Values);
                 }
-                else if (IsEqual(exInt))
+                else if (IsEqual(another))
                 {
                     SetToZero();
                 }
                 else
                 {
-                    return exInt.Plus(this);
+                    return another.Plus(this);
                 }
             }
-            else if (!Positive && exInt.Positive)
+            else if (!Positive && another.Positive)
             {
-                if (IsLargeThan(exInt))
+                if (IsLargeThan(another))
                 {
-                    Remove(exInt.Values);
+                    Remove(another.Values);
                 }
-                else if (IsEqual(exInt))
+                else if (IsEqual(another))
                 {
                     SetToZero();
                 }
                 else
                 {
-                    return exInt.Plus(this);
+                    return another.Plus(this);
                 }
             }
-            else if (!Positive && !exInt.Positive)
+            else if (!Positive && !another.Positive)
             {
-                Add(exInt.Values);
+                Add(another.Values);
             }
             return this;
         }
-        public ExInt Minus(ExInt exInt)
+        public EInt Minus(EInt another)
         {
-            if (Positive && exInt.Positive)
+            if (Positive && another.Positive)
             {
-                if (IsLargeThan(exInt))
+                if (IsLargeThan(another))
                 {
-                    Remove(exInt.Values);
+                    Remove(another.Values);
                 }
-                else if (IsEqual(exInt))
+                else if (IsEqual(another))
                 {
                     SetToZero();
                 }
                 else
                 {
-                    exInt.Remove(Values);
-                    exInt.SwitchPositive();
-                    return exInt;
+                    another.Remove(Values);
+                    another.SetPositive(false);
+                    return another;
                 }
             }
-            else if (Positive && !exInt.Positive)
+            else if (Positive && !another.Positive)
             {
-                Add(exInt.Values);
+                Add(another.Values);
             }
-            else if (!Positive && exInt.Positive)
+            else if (!Positive && another.Positive)
             {
-                Add(exInt.Values);
+                Add(another.Values);
             }
-            else if (!Positive && !exInt.Positive)
+            else if (!Positive && !another.Positive)
             {
-                if (IsLargeThan(exInt))
+                if (IsLargeThan(another))
                 {
-                    Remove(exInt.Values);
+                    Remove(another.Values);
                 }
-                else if (IsEqual(exInt))
+                else if (IsEqual(another))
                 {
                     SetToZero();
                 }
                 else
                 {
-                    exInt.Remove(Values);
-                    exInt.SwitchPositive();
-                    return exInt;
+                    another.Remove(Values);
+                    another.SetPositive(true);
+                    return another;
                 }
             }
             return this;
@@ -165,14 +180,14 @@ namespace External
         }
         #endregion
 
-        #region help methods
-        private void SwitchPositive()
+        #region helper methods
+        private void SetPositive(bool Positive)
         {
-            Positive = !Positive;
+            this.Positive = Positive;
         }
         private void SetToZero()
         {
-            Positive = true;
+            SetPositive(true);
             Values = new List<byte> { 0 };
         }
         private void ClearEmpty()
@@ -185,44 +200,44 @@ namespace External
                     break;
             }
         }
-        public bool IsEqual(ExInt exInt)
+        public bool IsEqual(EInt another)
         {
-            if (Values.Count != exInt.Values.Count)
+            if (Values.Count != another.Values.Count)
                 return false;
             for (int i = Values.Count - 1; i >= 0; i--)
             {
-                if (Values[i] != exInt.Values[i])
+                if (Values[i] != another.Values[i])
                     return false;
             }
             return true;
         }
-        public bool IsLargeThan(ExInt exInt)
+        public bool IsLargeThan(EInt another)
         {
-            if (Values.Count > exInt.Values.Count)
+            if (Values.Count > another.Values.Count)
                 return true;
-            if (Values.Count < exInt.Values.Count)
+            if (Values.Count < another.Values.Count)
                 return false;
             for (int i = Values.Count - 1; i >= 0; i--)
             {
-                if (Values[i] > exInt.Values[i])
+                if (Values[i] > another.Values[i])
                     return true;
-                if (Values[i] < exInt.Values[i])
+                if (Values[i] < another.Values[i])
                     return false;
             }
             return false;
         }
-        public bool IsLargeThanForReal(ExInt exInt)
+        public bool IsLargeThanForReal(EInt another)
         {
-            if (Positive && exInt.Positive)
-                return IsLargeThan(exInt);
-            if (Positive && !exInt.Positive)
+            if (Positive && another.Positive)
+                return IsLargeThan(another);
+            if (Positive && !another.Positive)
                 return true;
-            if (!Positive && exInt.Positive)
+            if (!Positive && another.Positive)
                 return false;
-            if (!Positive && !exInt.Positive && IsEqual(exInt))
+            if (!Positive && !another.Positive && IsEqual(another))
                 return false;
-            if (!Positive && !exInt.Positive)
-                return !IsLargeThan(exInt);
+            if (!Positive && !another.Positive)
+                return !IsLargeThan(another);
             return false;
         }
         private string GetPositive()
@@ -277,62 +292,79 @@ namespace External
         #endregion
 
         #region operators
-        public static implicit operator ExInt(string v)
+        public static implicit operator EInt(string v)
         {
-            return new ExInt(v);
+            return new EInt(v);
         }
-        public static implicit operator ExInt(ulong v)
+        public static implicit operator EInt(long v)
         {
-            return new ExInt(v.ToString());
+            return new EInt(v.ToString(), v >= 0);
         }
-        public static ExInt operator +(ExInt exInt, string v)
+        public static explicit operator string(EInt v)
         {
-            return exInt + new ExInt(v);
+            return v.ToString();
         }
-        public static ExInt operator -(ExInt exInt, string v)
-        {
-            return exInt - new ExInt(v);
-        }
-        public static ExInt operator +(ExInt left, ExInt right)
+        public static EInt operator +(EInt left, EInt right)
         {
             return left.Plus(right);
         }
-        public static ExInt operator -(ExInt left, ExInt right)
+        public static EInt operator -(EInt left, EInt right)
         {
             return left.Minus(right);
         }
-        public static ExInt operator ++(ExInt exInt)
+        public static EInt operator *(EInt left, EInt right)
         {
-            return exInt.Plus(1);
+            if (right == 0)
+            {
+                left.SetToZero();
+            }
+            else
+            {
+                if (right.IsLargeThan(left))
+                    left.Replace(ref right);
+                if (left.Positive && !right.Positive)
+                {
+                    left.SetPositive(false);
+                    right.SetPositive(true);
+                }
+                else if (!left.Positive && !right.Positive)
+                {
+                    left.SetPositive(true);
+                    right.SetPositive(true);
+                }
+                EInt tempExInt = left.Clone();
+                for (EInt count = 1; count < right; count++)
+                    left.Add(tempExInt.Values);
+            }
+            return left;
         }
-        public static ExInt operator --(ExInt exInt)
+        public static EInt operator /(EInt left, EInt right)
         {
-            return exInt.Minus(1);
+            return 0;
         }
-        public static bool operator <(ExInt left, ExInt right)
+        public static EInt operator ++(EInt left)
+        {
+            return left.Plus(1);
+        }
+        public static EInt operator --(EInt left)
+        {
+            return left.Minus(1);
+        }
+        public static bool operator <(EInt left, EInt right)
         {
             return right.IsLargeThanForReal(left);
         }
-        public static bool operator >(ExInt left, ExInt right)
+        public static bool operator >(EInt left, EInt right)
         {
             return left.IsLargeThanForReal(right);
         }
-        public static ExInt operator *(ExInt exInt, string v)
+        public static bool operator ==(EInt left, EInt right)
         {
-            bool positive = exInt.Positive;
-            bool reverse = !positive;
-            exInt.Positive = true;
-
-            ExInt tempExInt = new ExInt(exInt);
-            ExInt maxCount = new ExInt(v);
-            for (ExInt count = 1; count < maxCount; count++)
-            {
-                if (reverse)
-                    positive = !positive;
-                exInt.Plus(tempExInt);
-            }
-            exInt.Positive = positive;
-            return exInt;
+            return left.Positive == right.Positive && left.IsEqual(right);
+        }
+        public static bool operator !=(EInt left, EInt right)
+        {
+            return left.Positive != right.Positive || !left.IsEqual(right);
         }
         #endregion
     }

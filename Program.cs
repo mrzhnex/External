@@ -6,12 +6,14 @@ namespace External
     {
         public static void Main()
         {
-            Console.WriteLine("Hello world!");
+            Console.Write("Enter the number:");
 
-            ExInt exInt = 0;
-            while (true)
+            string line = Console.ReadLine();
+            EInt number = line;
+            while (line.ToLower() != "exit")
             {
-                string line = Console.ReadLine();
+                Console.WriteLine("Number: " + number.ToString());
+                line = Console.ReadLine();
                 if (line.Length > 0)
                 {
                     string symbol = line[0].ToString();
@@ -20,21 +22,23 @@ namespace External
                     switch (symbol)
                     {
                         case "+":
-                            exInt += line;
+                            number += line;
                             break;
                         case "-":
-                            exInt -= line;
+                            number -= line;
                             break;
                         case "*":
-                            exInt *= line;
+                            number *= line;
+                            break;
+                        case "/":
+                            number /= line;
                             break;
                         default:
                             line = symbol + line;
-                            exInt = line;
+                            number = line;
                             break;
                     }
                 }
-                Console.WriteLine("Number: " + exInt.ToString());
             }
             
             Console.ReadKey();
