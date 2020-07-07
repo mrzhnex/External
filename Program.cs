@@ -7,7 +7,6 @@ namespace External
         public static void Main()
         {
             Console.Write("Enter the number:");
-
             string line = Console.ReadLine();
             EInt number = line;
             while (line.ToLower() != "exit")

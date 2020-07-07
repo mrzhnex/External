@@ -38,11 +38,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="EInt.cs" />
+    <Compile Include="EIntException.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include=".editorconfig" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

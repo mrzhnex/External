@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace External
 {
@@ -20,11 +21,20 @@ namespace External
         private EInt(EInt old)
         {
             SetToZero();
+            SetPositive(old.Positive);
             Add(old.Values);
         }
         #endregion
 
         #region public methods
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
+        public override bool Equals(object obj)
+        {
+            return base.Equals(obj);
+        }
         public override string ToString()
         {
             return GetPositive() + ToString(Values);
@@ -306,49 +316,79 @@ namespace External
         }
         public static EInt operator +(EInt left, EInt right)
         {
-            return left.Plus(right);
+            return left.Clone().Plus(right.Clone());
         }
         public static EInt operator -(EInt left, EInt right)
         {
-            return left.Minus(right);
+            return left.Clone().Minus(right.Clone());
         }
         public static EInt operator *(EInt left, EInt right)
         {
-            if (right == 0)
+            EInt templeft = left.Clone();
+            EInt tempright = right.Clone();
+            if (tempright == 0)
             {
-                left.SetToZero();
+                templeft.SetToZero();
+                return templeft;
             }
-            else
+            if (right.IsLargeThan(templeft))
+                templeft.Replace(ref tempright);
+            if (templeft.Positive && !tempright.Positive)
             {
-                if (right.IsLargeThan(left))
-                    left.Replace(ref right);
-                if (left.Positive && !right.Positive)
-                {
-                    left.SetPositive(false);
-                    right.SetPositive(true);
-                }
-                else if (!left.Positive && !right.Positive)
-                {
-                    left.SetPositive(true);
-                    right.SetPositive(true);
-                }
-                EInt tempExInt = left.Clone();
-                for (EInt count = 1; count < right; count++)
-                    left.Add(tempExInt.Values);
+                templeft.SetPositive(false);
+                tempright.SetPositive(true);
             }
-            return left;
+            else if (!templeft.Positive && !tempright.Positive)
+            {
+                templeft.SetPositive(true);
+                tempright.SetPositive(true);
+            }
+            EInt originalValue = templeft.Clone();
+            for (EInt count = 1; count < tempright; count++)
+                templeft.Add(originalValue.Values);
+            return templeft;
         }
         public static EInt operator /(EInt left, EInt right)
         {
-            return 0;
+            EInt templeft = left.Clone();
+            EInt tempright = right.Clone();
+            if (templeft == 0)
+                return 0;
+            if (tempright == 0)
+                throw new EIntException("Division by zero");
+            bool positive = true;
+            if (!templeft.Positive && tempright.Positive)
+            {
+                positive = false;
+                templeft.SetPositive(true);
+            }
+            else if (templeft.Positive && !tempright.Positive)
+            {
+                positive = false;
+                tempright.SetPositive(true);
+            }
+            else if (!templeft.Positive && !tempright.Positive)
+            {
+                templeft.SetPositive(true);
+                tempright.SetPositive(true);
+            }
+
+            EInt count = 0;
+            while (templeft >= tempright)
+            {
+                templeft -= tempright;
+                count++;
+            }
+            count.SetPositive(positive);
+            return count;
         }
         public static EInt operator ++(EInt left)
         {
-            return left.Plus(1);
+            return left.Clone().Plus(1);
         }
         public static EInt operator --(EInt left)
         {
-            return left.Minus(1);
+            return left.Clone().Minus(1);
         }
         public static bool operator <(EInt left, EInt right)
         {
@@ -365,6 +405,14 @@ namespace External
         public static bool operator !=(EInt left, EInt right)
         {
             return left.Positive != right.Positive || !left.IsEqual(right);
+        }
+        public static bool operator <=(EInt left, EInt right)
+        {
+            return right.IsLargeThanForReal(left) || right.IsEqual(left);
+        }
+        public static bool operator >=(EInt left, EInt right)
+        {
+            return left.IsLargeThanForReal(right) || left.IsEqual(right);
         }
         #endregion
     }
