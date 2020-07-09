@@ -1,22 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace External
 {
     internal class EInt
     {
         #region fields
-        private List<byte> Values { get; set; }
+        private List<ulong> Values { get; set; }
         private bool Positive { get; set; }
+        private const ulong MaxSingleValue = 9999999999999999999;
+
         #endregion
 
         #region constructors
-        private EInt(string value, bool positive = true)
+        private EInt(string value)
         {
             SetToZero();
-            Positive = positive;
             if (value != null && value != string.Empty && value.Length > 0)
-                Add(GetBytesFromString(value));
+                Add(GetListFromString(value));
         }
         private EInt(EInt old)
         {
@@ -140,21 +140,21 @@ namespace External
         #endregion
 
         #region private methods
-        private void Add(List<byte> values)
+        private void Add(List<ulong> values)
         {
             values = CompareToOriginal(values);
             for (int i = 0; i < values.Count; i++)
             {
-                if (Values[i] + values[i] > 9)
+                if (Values[i] + values[i] > MaxSingleValue)
                 {
-                    Values[i] = (byte)(Values[i] + values[i] - 10);
+                    Values[i] = Values[i] + values[i] - (MaxSingleValue + 1);
                     if (i == values.Count - 1)
                     {
                         Values.Add(1);
                     }
                     else
                     {
-                        Values[i + 1] += 1;
+                        Values[i + 1]++;
                     }
                 }
                 else
@@ -164,7 +164,7 @@ namespace External
             }
             ClearEmpty();
         }
-        private void Remove(List<byte> values)
+        private void Remove(List<ulong> values)
         {
             values = CompareToOriginal(values);
             for (int i = 0; i < values.Count; i++)
@@ -177,7 +177,7 @@ namespace External
                     }
                     else
                     {
-                        Values[i] = (byte)(10 - (values[i] - Values[i]));
+                        Values[i] = (MaxSingleValue + 1) - (values[i] - Values[i]);
                         values[i + 1]++;
                     }
                 }
@@ -198,7 +198,7 @@ namespace External
         private void SetToZero()
         {
             SetPositive(true);
-            Values = new List<byte> { 0 };
+            Values = new List<ulong> { 0 };
         }
         private void ClearEmpty()
         {
@@ -254,25 +254,38 @@ namespace External
         {
             return Positive ? string.Empty : "-";
         }
-        private string ToString(List<byte> values)
+        private string ToString(List<ulong> values)
         {
             string result = string.Empty;
             for (int i = values.Count - 1; i >= 0; i--)
             {
-                result += values[i];
+                result += i != values.Count - 1 ? CompareToUlongLength(values[i].ToString()) : values[i].ToString();
             }
             return result;
         }
-        private List<byte> GetBytesFromString(string value)
+        private string CompareToUlongLength(string old)
         {
-            List<byte> tempValues = new List<byte>();
-            for (int i = value.Length - 1; i >= 0; i--)
+            while (old.Length < MaxSingleValue.ToString().Length)
             {
-                tempValues.Add(GetByte(value, i));
+                old = 0.ToString() + old;
+            }
+            return old;
+        }
+        private List<ulong> GetListFromString(string value)
+        {
+            List<ulong> tempValues = new List<ulong>();
+            while (value.Length % MaxSingleValue.ToString().Length != 0)
+            {
+                value = 0.ToString() + value;
+            }
+            while (value.Length > 0)
+            {
+                tempValues.Insert(0, ulong.Parse(value.Substring(0, MaxSingleValue.ToString().Length)));
+                value = value.Substring(MaxSingleValue.ToString().Length);    
             }
             return tempValues;
         }
-        private List<byte> CompareToOriginal(List<byte> values)
+        private List<ulong> CompareToOriginal(List<ulong> values)
         {
             if (values.Count > Values.Count)
             {
@@ -292,13 +305,6 @@ namespace External
             }
             return values;
         }
-        private byte GetByte(string value, int index)
-        {
-            if (byte.TryParse(value.ToCharArray()[index].ToString(), out byte result))
-                return result;
-            else
-                return 0;
-        }
         #endregion
 
         #region operators
@@ -306,9 +312,9 @@ namespace External
         {
             return new EInt(v);
         }
-        public static implicit operator EInt(long v)
+        public static implicit operator EInt(ulong v)
         {
-            return new EInt(v.ToString(), v >= 0);
+            return new EInt(v.ToString());
         }
         public static explicit operator string(EInt v)
         {
@@ -345,7 +351,9 @@ namespace External
             }
             EInt originalValue = templeft.Clone();
             for (EInt count = 1; count < tempright; count++)
+            {
                 templeft.Add(originalValue.Values);
+            }
             return templeft;
         }
         public static EInt operator /(EInt left, EInt right)

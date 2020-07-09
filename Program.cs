@@ -13,6 +13,8 @@ namespace External
             {
                 Console.WriteLine("Number: " + number.ToString());
                 line = Console.ReadLine();
+                if (line.ToLower() == "throw")
+                    throw new Exception();
                 if (line.Length > 0)
                 {
                     string symbol = line[0].ToString();
@@ -39,7 +41,6 @@ namespace External
                     }
                 }
             }
-            
             Console.ReadKey();
         }
     }
